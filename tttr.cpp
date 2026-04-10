@@ -7,7 +7,17 @@ char b[9] = {'1','2','3','4','5','6','7','8','9'}; //board
 int gEnd = 0; //gameEnd. Ends the game when set to 1.
 char pTurn = 'X'; //playerTurn. Shows which player's turn it is
 int currTurn = -1;
-int boardChangeStep = 0;
+int inp;
+
+
+void gameReset() {
+    pTurn = 'X';
+    currTurn = -1;
+
+    for (int i = 0; i < 9; i ++) {
+        b[i] = i+49;
+    }
+}
 
 void drawBoard() //used to draw the board when needed
 {
@@ -64,11 +74,18 @@ void winCheck() //check for win
         }
         cout << pTurn << " won!" << endl; //shows the winner
         }
+    if (currTurn == 8) {
+        drawBoard();
+        cout << "Tie! Enter any number from 1-9 to reset the board and play again: ";
+        cin >> inp;
+        if (inp > 0 && inp < 10) {
+            gameReset();
+            winCheck();
+        }
+    }
 }
 
 int main() {
-    
-    int inp = 0; //input
 
     while (gEnd == 0) //keeps the game running until gEnd variable is set to 1
     {
