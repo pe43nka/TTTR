@@ -1,14 +1,46 @@
 #include <iostream>
 #include <unistd.h> //currently used for sleep()
+#include <csignal> //working with signals
+#include <fstream> //working with files
 
 using namespace std;
 
+volatile sig_atomic_t exitIni = 0; //initiate exit flag. Main loop checks for it on every iteration and exits+saves if its up
 char b[9] = {'1','2','3','4','5','6','7','8','9'}; //board array
 int gEnd = 0; //gameEnd. Ends the game when set to 1.
 char pTurn = 'X'; //playerTurn. Shows which player's turn it is
 int currTurn = -1; //shows current turn, used to initiate a tie in case players ran out of turns
 int inp; //input
 
+void signalHandler(int) { //signal handler (only puts up the flag)
+    exitIni = 1;
+}
+
+void saveGame() {
+    ofstream file("TicTacToe_Save.txt");
+    if (file.is_open()) {
+        file << b[0] << b[1] << b[2] << b[3] << b[4] << b[5] << b[6] << b[7] << b[8];
+        file << pTurn << currTurn;
+        if (exitIni == 1) {
+        gEnd = 1;
+        cout << "\nGame saved. Exiting..." << endl;
+        file.close();
+        }
+}
+}
+
+void loadGame() {
+    ifstream file("TicTacToe_Save.txt");
+    if (file.is_open()){
+        file >> b[0] >> b[1] >> b[2] >> b[3] >> b[4] >> b[5] >> b[6] >> b[7] >> b[8];
+        file >> pTurn >> currTurn;
+        file.close();
+        currTurn = currTurn - 1; //prevents loading the game to be counted as a turn
+        cout << "Game loaded." << endl;
+    } else {
+        cout << "No save file found." << endl;
+    }
+}
 
 void gameReset() { //resets the game allowing to play again
     pTurn = 'X';
@@ -47,7 +79,7 @@ void changeBoardType() //toggles board look (numbers <-> dots)
 }
 
 void winCheck() //check for win
-{
+{ // " != '.' " prevents winCheck() from taking dotted mode as a win (due to all symbols being the same) 
     if (   (b[0] != '.' && b[0] == b[1] && b[1] == b[2]) //horizLine1
         || (b[3] != '.' && b[3] == b[4] && b[4] == b[5]) //horizLine2
         || (b[6] != '.' && b[6] == b[7] && b[7] == b[8]) //horizLine1
@@ -95,18 +127,38 @@ void winCheck() //check for win
 
 int main() {
 
+    signal(SIGINT, signalHandler); //register handler for SIGINT (aka Ctrl + C)
+
     while (gEnd == 0) //keeps the game running until gEnd variable is set to 1
     {
+        inp = 0; //resets input value every turn to prevent errors
+
+        if (exitIni == 1) { //checks if exit flag is up. If it is, saves the game and ends it
+            saveGame();
+        } else {
         drawBoard(); //draws the board before a turn
         currTurn = currTurn + 1; //increases turn calue to initiate a tie if needed
-        cout << "Player Turn: " << pTurn << " | Current Turn: " << currTurn << "\nEnter 0 to change the board look" << endl; //shows either X or O depending on which player's turn it is
+        cout << "Player Turn: " << pTurn << " | Current Turn: " << currTurn << "\nEnter 10 to change the board look, 11 to load game, 12 to save game\nPress Ctrl + C to exit and save" << endl; //shows either X or O depending on which player's turn it is
 
         cout << "Enter any number between 1-9 to put a shape: "; //notifies player to only enter numbers from 1-9
         cin >> inp; //player input
-        if (inp > 0 && inp < 10) //checks if input is correct
+        cout << "\nPlease wait..." << endl;
+        sleep(1);
+        //DIFFERENT INPUTS. MID-GAME OPTIONS
+        if (inp == 10) //allows player to change the board look
         {
-       
-            if (b[inp-1] != 'X' && b[inp-1] != 'O') //checks if this tile is occupied
+            changeBoardType(); // ^^^
+        } 
+        else if (inp == 11) 
+        {
+            loadGame(); //allows player to load the game
+        } 
+        else if (inp == 12) 
+        {
+            saveGame(); //allows player to save the game
+        }
+        else if (inp > 0 && inp < 10) { //checks if input is correct
+        if (b[inp-1] != 'X' && b[inp-1] != 'O') //checks if this tile is occupied
             {
                 if (pTurn == 'X') //if not, checks for turn value (X/O)
                 {
@@ -116,17 +168,22 @@ int main() {
                     b[inp-1] = 'O'; //same as X, but if turn is O
                     pTurn = 'X'; //switches player turn value
                 }
-            } else {
+            } else if (exitIni == 0) { //if tile IS occupied, notifies the player AND DOESNT change the turn value
+                currTurn = currTurn - 1; //prevents incorrect turns to be counted to currTurn value
                 cout << "\n-----------------------------------------------\nThis tile is occupied. Try again!\nProcceeding in 3 seconds...\n-----------------------------------------------" << endl; //if tile IS occupied. notifies the player AND DOESNT change the turn value
                 sleep(3); //gives player time to read the error message
             } //(turn value will never be changed unless player entered a CORRECT input value (from 1-9 and shouldn't be occupied))
-            winCheck();
-        } else if (inp == 0) //allows player to change the board look
-        {
-            changeBoardType(); // ^^^
-        } else {
+        } else if (exitIni == 0) { 
+            currTurn = currTurn -1; //prevents incorrect turns to be counted to currTurn value
             cout << "\n-----------------------------------------------\nYou can only enter numbers from 1-9. Try Again!\nProcceeding in 3 seconds...\n-----------------------------------------------" << endl;
-            sleep(3); //gives player time to read the error message
+            sleep(3); //gives player time to read the error message 
+        }
+
+        if (exitIni == 0) { //if exit signal is received, the game will skip winCheck() and go straight to saving and exiting
+        winCheck();
         }
     }
+
+}
+    return 0;
 }
