@@ -21,10 +21,10 @@ void saveGame() {
     if (file.is_open()) {
         file << b[0] << b[1] << b[2] << b[3] << b[4] << b[5] << b[6] << b[7] << b[8];
         file << pTurn << currTurn;
+        file.close();
         if (exitIni == 1) {
         gEnd = 1;
         cout << "\nGame saved. Exiting..." << endl;
-        file.close();
         }
 }
 }
