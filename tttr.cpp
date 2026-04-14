@@ -22,12 +22,12 @@ void saveGame() { //saves the game (and ends the game if exitIni is up)
         file << b[0] << b[1] << b[2] << b[3] << b[4] << b[5] << b[6] << b[7] << b[8];
         file << pTurn << currTurn;
         file.close();
-        currTurn = currTurn - 1; //prevents saving the game to be counted as a turn
         if (exitIni == 1) {
         gEnd = 1;
         cout << "\nGame saved. Exiting..." << endl;
         }
-}
+    }
+    currTurn = currTurn - 1; //prevents saving the game to be counted as a turn
 }
 
 void loadGame() { //loads the game
@@ -36,11 +36,11 @@ void loadGame() { //loads the game
         file >> b[0] >> b[1] >> b[2] >> b[3] >> b[4] >> b[5] >> b[6] >> b[7] >> b[8];
         file >> pTurn >> currTurn;
         file.close();
-        currTurn = currTurn - 1; //prevents loading the game to be counted as a turn
         cout << "Game loaded." << endl;
     } else {
         cout << "No save file found." << endl;
     }
+    currTurn = currTurn - 1; //prevents loading the game to be counted as a turn
 }
 
 void gameReset() { //resets the game allowing to play again
@@ -75,8 +75,6 @@ void changeBoardType() //toggles board look (numbers <-> dots)
             }  
         }
     }
-    
-    
 }
 
 void winCheck() //check for win
@@ -146,43 +144,48 @@ int main() {
             break;
         }
 
-        // cout << "\nPlease wait..." << endl;
-        // sleep(1);
-
-        //DIFFERENT INPUTS. MID-GAME OPTIONS
-        if (inp == 10) //allows player to change the board look
+        //INPUT RESPONSES. MID-GAME OPTIONS
+        switch (inp)
         {
-            changeBoardType(); // ^^^
-        } 
-        else if (inp == 11) 
-        {
+        case 10:
+            changeBoardType(); //allows player to change the board look
+            break;
+        
+        case 11:
             loadGame(); //allows player to load the game
-        } 
-        else if (inp == 12) 
-        {
+            break;
+
+        case 12:
             saveGame(); //allows player to save the game
+            break;
+
+        default:
+            break;
         }
-        else if (inp > 0 && inp < 10) { //checks if input is correct
-        if (b[inp-1] != 'X' && b[inp-1] != 'O') //checks if this tile is occupied
+        
+        if ((inp > 0 && inp < 10) && (b[inp-1] != 'X' && b[inp-1] != 'O')) { //checks if input is correct and tile is unoccupied
+
+            switch (pTurn)
             {
-                if (pTurn == 'X') //if not, checks for turn value (X/O)
-                {
-                    b[inp-1] = 'X'; //if X, changes array element "input - 1" ("- 1" is made due to element's index and displayed index being different by 1)
-                    pTurn = 'O'; //switches player turn value
-                } else {
-                    b[inp-1] = 'O'; //same as X, but if turn is O
-                    pTurn = 'X'; //switches player turn value
-                }
-            } else { //if tile IS occupied, notifies the player AND DOESNT change the turn value
+            case 'X':
+                b[inp-1] = 'X'; //if X, changes array element "input - 1" ("- 1" is made due to element's index and displayed index being different by 1)
+                pTurn = 'O'; //switches player turn value
+                break;
+
+            case 'O':
+                b[inp-1] = 'O'; //if X, changes array element "input - 1" ("- 1" is made due to element's index and displayed index being different by 1)
+                pTurn = 'X'; //switches player turn value
+                break;
+            
+            default:
+                break;
+            }
+
+            } else { //if tile IS occupied or input is incorrect, notifies the player AND DOESNT change the turn value
                 currTurn = currTurn - 1; //prevents incorrect turns to be counted to currTurn value
-                cout << "\n-----------------------------------------------\nThis tile is occupied. Try again!\nProcceeding in 2 seconds...\n-----------------------------------------------" << endl; //if tile IS occupied. notifies the player AND DOESNT change the turn value
+                cout << "\n-----------------------------------------------\nIncorrect Turn. Check if your input is withing 1-9 and the tile is unoccupied!\nProcceeding in 2 seconds...\n-----------------------------------------------" << endl; //if tile IS occupied. notifies the player AND DOESNT change the turn value
                 sleep(2); //gives player time to read the error message
-            } //(turn value will never be changed unless player entered a CORRECT input value (from 1-9 and shouldn't be occupied))
-        } else { 
-            currTurn = currTurn -1; //prevents incorrect turns to be counted to currTurn value
-            cout << "\n-----------------------------------------------\nYou can only enter numbers from 1-9. Try Again!\nProcceeding in 2 seconds...\n-----------------------------------------------" << endl;
-            sleep(2); //gives player time to read the error message 
-        }
+            } //(turn value will never be changed unless player entered a CORRECT input value (from 1-9 and shouldn't be occupied)
 
         if (exitIni == 0) { //if exit signal is received, the game will skip winCheck() and go straight to saving and exiting
         winCheck();
