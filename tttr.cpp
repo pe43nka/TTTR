@@ -16,12 +16,13 @@ void signalHandler(int) { //signal handler (only puts up the flag)
     exitIni = 1;
 }
 
-void saveGame() {
+void saveGame() { //saves the game (and ends the game if exitIni is up)
     ofstream file("TicTacToe_Save.txt");
     if (file.is_open()) {
         file << b[0] << b[1] << b[2] << b[3] << b[4] << b[5] << b[6] << b[7] << b[8];
         file << pTurn << currTurn;
         file.close();
+        currTurn = currTurn - 1; //prevents saving the game to be counted as a turn
         if (exitIni == 1) {
         gEnd = 1;
         cout << "\nGame saved. Exiting..." << endl;
@@ -29,7 +30,7 @@ void saveGame() {
 }
 }
 
-void loadGame() {
+void loadGame() { //loads the game
     ifstream file("TicTacToe_Save.txt");
     if (file.is_open()){
         file >> b[0] >> b[1] >> b[2] >> b[3] >> b[4] >> b[5] >> b[6] >> b[7] >> b[8];
@@ -133,17 +134,21 @@ int main() {
     {
         inp = 0; //resets input value every turn to prevent errors
 
-        if (exitIni == 1) { //checks if exit flag is up. If it is, saves the game and ends it
-            saveGame();
-        } else {
         drawBoard(); //draws the board before a turn
         currTurn = currTurn + 1; //increases turn calue to initiate a tie if needed
         cout << "Player Turn: " << pTurn << " | Current Turn: " << currTurn << "\nEnter 10 to change the board look, 11 to load game, 12 to save game\nPress Ctrl + C to exit and save" << endl; //shows either X or O depending on which player's turn it is
 
         cout << "Enter any number between 1-9 to put a shape: "; //notifies player to only enter numbers from 1-9
         cin >> inp; //player input
-        cout << "\nPlease wait..." << endl;
-        sleep(1);
+
+        if (exitIni == 1) { //checks if exit flag is up. If it is, saves the game and ends it
+            saveGame();
+            break;
+        }
+
+        // cout << "\nPlease wait..." << endl;
+        // sleep(1);
+
         //DIFFERENT INPUTS. MID-GAME OPTIONS
         if (inp == 10) //allows player to change the board look
         {
@@ -168,20 +173,20 @@ int main() {
                     b[inp-1] = 'O'; //same as X, but if turn is O
                     pTurn = 'X'; //switches player turn value
                 }
-            } else if (exitIni == 0) { //if tile IS occupied, notifies the player AND DOESNT change the turn value
+            } else { //if tile IS occupied, notifies the player AND DOESNT change the turn value
                 currTurn = currTurn - 1; //prevents incorrect turns to be counted to currTurn value
-                cout << "\n-----------------------------------------------\nThis tile is occupied. Try again!\nProcceeding in 3 seconds...\n-----------------------------------------------" << endl; //if tile IS occupied. notifies the player AND DOESNT change the turn value
-                sleep(3); //gives player time to read the error message
+                cout << "\n-----------------------------------------------\nThis tile is occupied. Try again!\nProcceeding in 2 seconds...\n-----------------------------------------------" << endl; //if tile IS occupied. notifies the player AND DOESNT change the turn value
+                sleep(2); //gives player time to read the error message
             } //(turn value will never be changed unless player entered a CORRECT input value (from 1-9 and shouldn't be occupied))
-        } else if (exitIni == 0) { 
+        } else { 
             currTurn = currTurn -1; //prevents incorrect turns to be counted to currTurn value
-            cout << "\n-----------------------------------------------\nYou can only enter numbers from 1-9. Try Again!\nProcceeding in 3 seconds...\n-----------------------------------------------" << endl;
-            sleep(3); //gives player time to read the error message 
+            cout << "\n-----------------------------------------------\nYou can only enter numbers from 1-9. Try Again!\nProcceeding in 2 seconds...\n-----------------------------------------------" << endl;
+            sleep(2); //gives player time to read the error message 
         }
 
         if (exitIni == 0) { //if exit signal is received, the game will skip winCheck() and go straight to saving and exiting
         winCheck();
-        }
+        
     }
 
 }
